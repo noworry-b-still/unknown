@@ -1,1 +1,2 @@
-// library entry point
+// library entry 
+mod error;

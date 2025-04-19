@@ -2,6 +2,7 @@
 
 pub mod token_bucket;
 pub mod fixed_window;
+pub mod sliding_window;
 
 use super::error::Result;
 use async_trait::async_trait;

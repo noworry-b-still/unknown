@@ -5,6 +5,7 @@ pub mod error;
 pub mod logging;
 pub mod storage;
 pub mod test_utils;
+// Re-export the memory module from storage
 
 // Re-export key components for convenience
 pub use algorithms::fixed_window::FixedWindow;
@@ -14,7 +15,7 @@ pub use algorithms::{RateLimitAlgorithm, RateLimitStatus};
 pub use config::{FixedWindowConfig, RateLimiterConfig, SlidingWindowConfig, TokenBucketConfig};
 pub use error::{RateLimiterError, Result};
 pub use logging::init as init_logging;
-pub use storage::StorageBackend;
+pub use storage::{memory::MemoryPipeline, memory::MemoryStorage, StorageBackend, StoragePipeline};
 
 // Main rate limiter that coordinates algorithms and storage
 #[derive(Debug)]

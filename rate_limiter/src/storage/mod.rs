@@ -1,5 +1,7 @@
 // src/storage/mod.rs
 
+pub mod memory;
+
 use super::error::Result;
 use async_trait::async_trait;
 use std::fmt::Debug;

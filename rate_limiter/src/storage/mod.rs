@@ -1,6 +1,10 @@
 // src/storage/mod.rs
 
 pub mod memory;
+pub mod redis;
+
+pub use memory::{MemoryPipeline, MemoryStorage};
+pub use redis::{RedisPipeline, RedisStorage};
 
 use super::error::Result;
 use async_trait::async_trait;

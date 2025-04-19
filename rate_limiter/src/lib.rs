@@ -15,7 +15,7 @@ pub use algorithms::{RateLimitAlgorithm, RateLimitStatus};
 pub use config::{FixedWindowConfig, RateLimiterConfig, SlidingWindowConfig, TokenBucketConfig};
 pub use error::{RateLimiterError, Result};
 pub use logging::init as init_logging;
-pub use storage::{memory::MemoryPipeline, memory::MemoryStorage, StorageBackend, StoragePipeline};
+pub use storage::{StorageBackend, StoragePipeline};
 
 // Main rate limiter that coordinates algorithms and storage
 #[derive(Debug)]

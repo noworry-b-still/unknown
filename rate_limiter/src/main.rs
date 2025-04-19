@@ -1,6 +1,6 @@
 use dotenv::dotenv;
 use rate_limiter::init_logging;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 fn main() {
     dotenv().ok();

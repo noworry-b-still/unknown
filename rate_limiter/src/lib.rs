@@ -8,6 +8,7 @@ pub mod test_utils;
 
 // Re-export key components for convenience
 pub use algorithms::fixed_window::FixedWindow;
+pub use algorithms::sliding_window::SlidingWindow;
 pub use algorithms::token_bucket::TokenBucket;
 pub use algorithms::{RateLimitAlgorithm, RateLimitStatus};
 pub use config::{FixedWindowConfig, RateLimiterConfig, SlidingWindowConfig, TokenBucketConfig};

@@ -1,11 +1,13 @@
 // library entry
 pub mod algorithms;
+pub mod config;
 pub mod error;
 pub mod logging;
 pub mod storage;
 
 // Re-export key components for convenience
 pub use algorithms::{RateLimitAlgorithm, RateLimitStatus};
+pub use config::{FixedWindowConfig, RateLimiterConfig, SlidingWindowConfig, TokenBucketConfig};
 pub use error::{RateLimiterError, Result};
 pub use logging::init as init_logging;
 pub use storage::StorageBackend;

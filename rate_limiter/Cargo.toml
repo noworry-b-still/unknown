@@ -16,3 +16,4 @@ tracing = "0.1.41"
 tracing-subscriber = {version = "0.3.19", features = ["env-filter", "json"] }
 uuid = { version = "1.16.0", features = ["v4"] }
 dotenv = "0.15"
+futures = "0.3.31"

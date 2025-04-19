@@ -4,6 +4,7 @@ pub mod config;
 pub mod error;
 pub mod logging;
 pub mod storage;
+pub mod test_utils;
 
 // Re-export key components for convenience
 pub use algorithms::{RateLimitAlgorithm, RateLimitStatus};

@@ -5,6 +5,7 @@ pub mod error;
 pub mod logging;
 pub mod storage;
 pub mod test_utils;
+pub mod resilience;
 // Re-export the memory module from storage
 
 // Re-export key components for convenience

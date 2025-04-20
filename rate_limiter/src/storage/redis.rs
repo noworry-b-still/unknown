@@ -103,6 +103,24 @@ impl RedisStorage {
             config,
         })
     }
+
+    /// Ping Redis to check health
+    pub async fn ping(&self) -> Result<()> {
+        // Use the same approach other methods use to get a connection
+        let mut conn = self.connection.lock().await;
+
+        let result: String = redis::AsyncCommands::ping(&mut *conn)
+            .await
+            .map_err(|e| RateLimiterError::Storage(StorageError::RedisCommand(e.to_string())))?;
+
+        if result == "PONG" {
+            Ok(())
+        } else {
+            Err(RateLimiterError::Storage(StorageError::RedisCommand(
+                format!("Unexpected response from Redis PING: {}", result),
+            )))
+        }
+    }
 }
 
 #[async_trait]

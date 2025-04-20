@@ -95,7 +95,7 @@ fn default_conn_timeout() -> Duration {
 }
 
 /// Configuration for in-memory storage backend
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct InMemoryConfig {
     /// Maximum number of entries to store
     #[serde(default = "default_max_entries")]

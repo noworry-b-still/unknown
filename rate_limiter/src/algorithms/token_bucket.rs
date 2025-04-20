@@ -1,9 +1,9 @@
 // src/algorithms/token_bucket.rs
 
-use super::super::algorithms::{RateLimitAlgorithm, RateLimitStatus};
-use super::super::config::TokenBucketConfig;
-use super::super::error::{RateLimiterError, Result};
-use super::super::storage::{StorageBackend, StoragePipeline};
+use crate::algorithms::{RateLimitAlgorithm, RateLimitStatus};
+use crate::config::TokenBucketConfig;
+use crate::error::{RateLimiterError, Result};
+use crate::storage::{StorageBackend, StoragePipeline};
 use async_trait::async_trait;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 

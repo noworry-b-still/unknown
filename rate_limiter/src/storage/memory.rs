@@ -9,9 +9,9 @@ use std::time::{Duration, Instant};
 use tokio::task;
 use tokio::time;
 
-use super::super::config::InMemoryConfig;
-use super::super::error::{RateLimiterError, Result, StorageError};
-use super::super::storage::{StorageBackend, StoragePipeline};
+use crate::config::InMemoryConfig;
+use crate::error::{RateLimiterError, Result, StorageError};
+use crate::storage::{StorageBackend, StoragePipeline};
 
 /// A simple pipeline implementation for in-memory storage
 #[derive(Default)]

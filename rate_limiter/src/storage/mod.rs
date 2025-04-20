@@ -6,7 +6,7 @@ pub mod redis;
 pub use memory::{MemoryPipeline, MemoryStorage};
 pub use redis::{RedisPipeline, RedisStorage};
 
-use super::error::Result;
+use crate::error::Result;
 use async_trait::async_trait;
 use std::fmt::Debug;
 use std::time::Duration;

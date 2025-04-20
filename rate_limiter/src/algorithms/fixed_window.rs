@@ -1,9 +1,9 @@
 // src/algorithms/fixed_window.rs
 
-use super::super::algorithms::{RateLimitAlgorithm, RateLimitStatus};
-use super::super::config::FixedWindowConfig;
-use super::super::error::{RateLimiterError, Result};
-use super::super::storage::StorageBackend;
+use crate::algorithms::{RateLimitAlgorithm, RateLimitStatus};
+use crate::config::FixedWindowConfig;
+use crate::error::{RateLimiterError, Result};
+use crate::storage::StorageBackend;
 use async_trait::async_trait;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 

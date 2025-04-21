@@ -14,10 +14,10 @@ pub use logging::init as init_logging;
 pub use storage::{StorageBackend, StoragePipeline};
 
 // Main rate limiter that coordinates algorithms and storage
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RateLimiter<A, S>
 where
-    A: RateLimitAlgorithm,
+    A: RateLimitAlgorithm ,
     S: StorageBackend,
 {
     // The algorithm to use for rate limiting

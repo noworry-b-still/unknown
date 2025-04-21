@@ -12,7 +12,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 /// The sliding window algorithm divides time into smaller buckets and uses them
 /// to approximate a continuous sliding window. It provides better granularity
 /// than the fixed window approach and avoids the burst problem.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SlidingWindow<S>
 where
     S: StorageBackend,
@@ -30,6 +30,12 @@ where
 {
     /// Creates a new sliding window with the given storage and configuration
     pub fn new(storage: S, config: SlidingWindowConfig) -> Self {
+        // Ensure precision is at least 1
+        let mut config = config;
+        if config.precision == 0 {
+            config.precision = 1; // Default to 1 bucket if precision is invalid
+        }
+
         Self { storage, config }
     }
 
@@ -41,21 +47,28 @@ where
             .as_secs()
     }
 
-    /// Calculate the bucket size in seconds
+    /// Calculate the bucket size in seconds, ensuring it's never zero
     fn bucket_size_secs(&self) -> u64 {
-        self.config.window.as_secs() / self.config.precision as u64
+        let window_secs = self.config.window.as_secs().max(1); // Ensure window is at least 1 second
+        let precision = self.config.precision.max(1) as u64; // Ensure precision is at least 1
+
+        // Calculate bucket size, ensuring it's at least 1 second
+        (window_secs / precision).max(1)
     }
 
     /// Calculate the current bucket index
     fn current_bucket_index(&self) -> u64 {
         let now = self.current_time_secs();
-        now / self.bucket_size_secs()
+        let bucket_size = self.bucket_size_secs();
+
+        // No need for division if bucket_size is guaranteed to be at least 1
+        now / bucket_size
     }
 
     /// Get the counts for all relevant buckets
     async fn get_bucket_counts(&self, key: &str) -> Result<Vec<(u64, u64)>> {
         let current_index = self.current_bucket_index();
-        let window_buckets = self.config.precision as u64;
+        let window_buckets = self.config.precision.max(1) as u64;
 
         // We need to consider all buckets that contribute to the current window
         let start_index = current_index.saturating_sub(window_buckets - 1);
@@ -113,21 +126,18 @@ where
 
     /// Calculate the total count across all buckets, weighted by their contribution to the current window
     fn calculate_weighted_count(&self, bucket_counts: &[(u64, u64)]) -> u64 {
+        if bucket_counts.is_empty() {
+            return 0;
+        }
+
         let current_index = self.current_bucket_index();
-        let bucket_size = self.bucket_size_secs();
-        let current_time = self.current_time_secs();
-        let current_bucket_start = current_index * bucket_size;
-        let time_in_current_bucket = current_time - current_bucket_start;
+        let precision = self.config.precision.max(1) as u64;
 
         let mut total_count = 0;
 
         for &(index, count) in bucket_counts {
-            if index == current_index {
-                // Current bucket is weighted by the fraction of time elapsed
-                let weight = time_in_current_bucket as f64 / bucket_size as f64;
-                total_count += (count as f64 * weight) as u64;
-            } else if index > current_index.saturating_sub(self.config.precision as u64) {
-                // Previous buckets within the window
+            // Add the count for any bucket within our window
+            if index >= current_index.saturating_sub(precision - 1) && index <= current_index {
                 total_count += count;
             }
         }
@@ -150,6 +160,11 @@ where
     }
 
     async fn is_allowed(&self, key: &str) -> Result<bool> {
+        // Guard against any potential zero precision or window
+        if self.config.max_requests == 0 {
+            return Ok(false);
+        }
+
         let bucket_counts = self.get_bucket_counts(key).await?;
         let total_count = self.calculate_weighted_count(&bucket_counts);
 
@@ -172,6 +187,17 @@ where
     }
 
     async fn check_and_record(&self, key: &str) -> Result<RateLimitStatus> {
+        // Guard against any potential zero precision or window
+        if self.config.max_requests == 0 {
+            return Ok(RateLimitStatus {
+                allowed: false,
+                remaining: 0,
+                limit: self.config.max_requests,
+                reset_after: Duration::from_secs(0),
+                details: None,
+            });
+        }
+
         let bucket_counts = self.get_bucket_counts(key).await?;
         let total_count = self.calculate_weighted_count(&bucket_counts);
 
@@ -182,16 +208,17 @@ where
             self.increment_current_bucket(key).await?;
         }
 
-        // Calculate time until window resets
-        // This is approximate - for a sliding window, it depends on request patterns
-        let remaining = self
-            .config
-            .max_requests
-            .saturating_sub(total_count + if allowed { 1 } else { 0 });
+        // Calculate remaining requests
+        let remaining = self.config.max_requests.saturating_sub(total_count);
+        if allowed {
+            // If we just used a token, subtract 1 more
+            let remaining = remaining.saturating_sub(1);
+        }
 
-        // Calculate reset time based on oldest bucket cycling out
+        // Calculate reset time based on bucket expiration
+        // This is approximate for a sliding window
         let bucket_size = self.bucket_size_secs();
-        let reset_after = Duration::from_secs(bucket_size * self.config.precision as u64);
+        let reset_after = Duration::from_secs(bucket_size * self.config.precision.max(1) as u64);
 
         Ok(RateLimitStatus {
             allowed,
@@ -204,17 +231,17 @@ where
 
     async fn reset(&self, key: &str) -> Result<()> {
         let current_index = self.current_bucket_index();
-        let window_buckets = self.config.precision as u64;
+        let window_buckets = self.config.precision.max(1) as u64;
 
-        // Delete all buckets that contribute to the current window
+        // Calculate the oldest bucket in the window
         let start_index = current_index.saturating_sub(window_buckets - 1);
 
-        // Create a pipeline to delete all bucket keys
+        // Create a pipeline to reset all bucket keys
         let mut pipeline = self.storage.pipeline();
 
         for i in start_index..=current_index {
             let bucket_key = format!("{}:bucket:{}", key, i);
-            // We can't directly delete in a pipeline, so we'll set to 0
+            // Set all buckets to 0
             pipeline.set(&bucket_key, &0u64.to_be_bytes(), None);
         }
 

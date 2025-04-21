@@ -4,10 +4,10 @@
 mod token_bucket_tests;
 
 // Tests for Fixed Window algorithm
-// mod fixed_window_tests;
+mod fixed_window_tests;
 
 // Tests for Sliding Window algorithm
-// mod sliding_window_tests;
+mod sliding_window_tests;
 
 // /// Common tests for all algorithms
 // #[cfg(test)]

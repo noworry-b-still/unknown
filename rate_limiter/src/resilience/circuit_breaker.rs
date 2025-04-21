@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use tracing::{debug, warn};
@@ -64,14 +64,18 @@ impl CircuitBreaker {
 
     /// Check if the circuit breaker allows the request to proceed
     pub async fn allow_request(&self) -> bool {
-        match *self.state.read().await {
+        // Get a copy of the current state to avoid holding the lock
+        let current_state = *self.state.read().await;
+
+        match current_state {
             CircuitState::Closed => true,
             CircuitState::Open => {
                 // Check if it's time to transition to half-open
-                let opened_at = self.opened_at.read().await;
-                if let Some(time) = *opened_at {
+                let opened_at_value = self.opened_at.read().await.clone();
+
+                if let Some(time) = opened_at_value {
                     if time.elapsed() > self.config.reset_timeout {
-                        drop(opened_at); // Drop the read lock before acquiring write lock
+                        // Update state to half-open
                         let mut state = self.state.write().await;
                         *state = CircuitState::HalfOpen;
                         debug!("Circuit breaker state transitioned to half-open");
@@ -82,7 +86,6 @@ impl CircuitBreaker {
             }
             CircuitState::HalfOpen => {
                 // In half-open state, allow a limited number of requests through
-                // This is a simplistic approach where we just allow one request at a time
                 true
             }
         }
@@ -90,7 +93,10 @@ impl CircuitBreaker {
 
     /// Record a successful operation
     pub async fn record_success(&self) {
-        match *self.state.read().await {
+        // Get a copy of the current state to avoid holding the lock
+        let current_state = *self.state.read().await;
+
+        match current_state {
             CircuitState::Closed => {
                 // Reset failure count on success
                 self.failure_count.store(0, Ordering::SeqCst);
@@ -119,17 +125,30 @@ impl CircuitBreaker {
 
     /// Record a failed operation
     pub async fn record_failure(&self) {
-        match *self.state.read().await {
+        // Get a copy of the current state to avoid holding the lock
+        let current_state = *self.state.read().await;
+
+        match current_state {
             CircuitState::Closed => {
                 // Increment failure count
                 let new_failure_count = self.failure_count.fetch_add(1, Ordering::SeqCst) + 1;
 
                 // If we've reached the failure threshold, open the circuit
                 if new_failure_count >= self.config.failure_threshold {
-                    let mut state = self.state.write().await;
-                    *state = CircuitState::Open;
-                    let mut opened_at = self.opened_at.write().await;
-                    *opened_at = Some(Instant::now());
+                    let now = Instant::now();
+
+                    // First update the state
+                    {
+                        let mut state = self.state.write().await;
+                        *state = CircuitState::Open;
+                    }
+
+                    // Then update the opened_at time
+                    {
+                        let mut opened_at = self.opened_at.write().await;
+                        *opened_at = Some(now);
+                    }
+
                     warn!(
                         "Circuit breaker opened after {} consecutive failures",
                         new_failure_count
@@ -138,10 +157,16 @@ impl CircuitBreaker {
             }
             CircuitState::HalfOpen => {
                 // Any failure in half-open state opens the circuit again
-                let mut state = self.state.write().await;
-                *state = CircuitState::Open;
-                let mut opened_at = self.opened_at.write().await;
-                *opened_at = Some(Instant::now());
+                {
+                    let mut state = self.state.write().await;
+                    *state = CircuitState::Open;
+                }
+
+                {
+                    let mut opened_at = self.opened_at.write().await;
+                    *opened_at = Some(Instant::now());
+                }
+
                 self.success_count.store(0, Ordering::SeqCst);
                 warn!("Circuit breaker re-opened after failure in half-open state");
             }

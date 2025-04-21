@@ -49,7 +49,7 @@ impl StoragePipeline for MockStoragePipeline {
 }
 
 /// Mock implementation of the StorageBackend trait for testing
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MockStorage {
     data: Arc<Mutex<HashMap<String, Vec<u8>>>>,
     expiry: Arc<Mutex<HashMap<String, std::time::Instant>>>,

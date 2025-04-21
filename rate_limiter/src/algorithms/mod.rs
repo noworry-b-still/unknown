@@ -3,6 +3,7 @@
 pub mod fixed_window;
 pub mod sliding_window;
 pub mod token_bucket;
+pub mod tests;
 
 pub use fixed_window::FixedWindow;
 pub use sliding_window::SlidingWindow;

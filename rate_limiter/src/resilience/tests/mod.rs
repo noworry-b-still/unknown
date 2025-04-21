@@ -2,6 +2,7 @@
 //! Tests for resilience features
 
 mod circuit_breaker_tests;
+mod exponential_backoff_tests;
 
 // Common test utilities for resilience testing
 pub(crate) mod utils {

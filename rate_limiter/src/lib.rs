@@ -3,12 +3,10 @@ pub mod algorithms;
 pub mod config;
 pub mod error;
 pub mod logging;
+pub mod resilience;
 pub mod storage;
 pub mod test_utils;
-pub mod resilience;
-// Re-export the memory module from storage
 
-// Re-export key components for convenience
 pub use algorithms::{RateLimitAlgorithm, RateLimitStatus};
 pub use config::{FixedWindowConfig, RateLimiterConfig, SlidingWindowConfig, TokenBucketConfig};
 pub use error::{RateLimiterError, Result};

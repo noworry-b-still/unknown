@@ -3,6 +3,7 @@
 
 mod circuit_breaker_tests;
 mod exponential_backoff_tests;
+mod health_checker_tests;
 
 // Common test utilities for resilience testing
 pub(crate) mod utils {
@@ -24,7 +25,7 @@ pub(crate) mod utils {
 
         RedisStorage::new(config).await
     }
-    
+
     #[allow(dead_code)]
     /// Creates a memory storage for testing
     pub fn create_mock_memory() -> MemoryStorage {
@@ -37,7 +38,6 @@ pub(crate) mod utils {
         MemoryStorage::new(config)
     }
 
-
     #[allow(dead_code)]
     /// Mock Redis client that can simulate failures
     pub struct MockRedisClient {
@@ -45,7 +45,7 @@ pub(crate) mod utils {
         pub success_after_failures: Option<usize>,
         pub failure_count: usize,
     }
-    
+
     #[allow(dead_code)]
     impl MockRedisClient {
         pub fn new() -> Self {

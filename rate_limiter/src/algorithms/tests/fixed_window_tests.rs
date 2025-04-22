@@ -7,9 +7,9 @@ mod tests {
     use tokio::time;
 
     use crate::{
-        algorithms::{FixedWindow, RateLimitAlgorithm},
+        algorithms::FixedWindow,
         config::FixedWindowConfig,
-        test_utils::{create_test_rate_limiter, test_rate_limit_scenario, MockStorage, TestClock},
+        test_utils::{create_test_rate_limiter, MockStorage},
     };
 
     /// Test window boundaries (requests at window start/end)

@@ -2,11 +2,7 @@
 mod tests {
     use std::time::Duration;
 
-    use crate::{
-        algorithms::{RateLimitAlgorithm, SlidingWindow},
-        config::SlidingWindowConfig,
-        test_utils::MockStorage,
-    };
+    use crate::{algorithms::SlidingWindow, config::SlidingWindowConfig, test_utils::MockStorage};
 
     /// Test if create_test_rate_limiter can be called without crashing
     #[tokio::test]

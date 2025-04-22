@@ -212,7 +212,7 @@ where
         let remaining = self.config.max_requests.saturating_sub(total_count);
         if allowed {
             // If we just used a token, subtract 1 more
-            let remaining = remaining.saturating_sub(1);
+            let _remaining = remaining.saturating_sub(1);
         }
 
         // Calculate reset time based on bucket expiration

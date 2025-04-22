@@ -7,9 +7,9 @@ mod tests {
     use tokio::time;
 
     use crate::{
-        algorithms::{RateLimitAlgorithm, TokenBucket},
+        algorithms::TokenBucket,
         config::TokenBucketConfig,
-        test_utils::{create_test_rate_limiter, test_rate_limit_scenario, MockStorage, TestClock},
+        test_utils::{create_test_rate_limiter, MockStorage},
     };
     /// Test token consumption and token depletion
     #[tokio::test]

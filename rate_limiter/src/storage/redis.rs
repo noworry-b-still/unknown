@@ -89,13 +89,32 @@ impl Clone for RedisStorage {
 impl RedisStorage {
     /// Creates a new Redis storage with the given configuration
     pub async fn new(config: RedisConfig) -> Result<Self> {
+        // Open the client - this doesn't actually connect to Redis yet
         let client = Client::open(config.url.as_str())
             .map_err(|e| RateLimiterError::Storage(StorageError::RedisConnection(e.to_string())))?;
 
-        // Create a connection manager
-        let connection_manager = ConnectionManager::new(client.clone())
-            .await
-            .map_err(|e| RateLimiterError::Storage(StorageError::RedisConnection(e.to_string())))?;
+        // Create a connection manager with timeout
+        let connection_future = ConnectionManager::new(client.clone());
+
+        // Apply the connection timeout using tokio::time::timeout
+        let connection_manager =
+            match tokio::time::timeout(config.connection_timeout, connection_future).await {
+                Ok(result) => {
+                    // Connection attempt completed within timeout
+                    result.map_err(|e| {
+                        RateLimiterError::Storage(StorageError::RedisConnection(e.to_string()))
+                    })?
+                }
+                Err(_) => {
+                    // Connection attempt timed out
+                    return Err(RateLimiterError::Storage(StorageError::RedisConnection(
+                        format!(
+                            "Connection to Redis at {} timed out after {:?}",
+                            config.url, config.connection_timeout
+                        ),
+                    )));
+                }
+            };
 
         Ok(Self {
             client,
@@ -104,14 +123,27 @@ impl RedisStorage {
         })
     }
 
-    /// Ping Redis to check health
+    /// Ping Redis to check health with timeout
     pub async fn ping(&self) -> Result<()> {
         // Use the same approach other methods use to get a connection
         let mut conn = self.connection.lock().await;
 
-        let result: String = redis::AsyncCommands::ping(&mut *conn)
-            .await
-            .map_err(|e| RateLimiterError::Storage(StorageError::RedisCommand(e.to_string())))?;
+        // Apply the connection timeout to the ping operation
+        let ping_future = redis::AsyncCommands::ping::<String>(&mut *conn);
+
+        let result = match tokio::time::timeout(self.config.connection_timeout, ping_future).await {
+            Ok(inner_result) => inner_result.map_err(|e| {
+                RateLimiterError::Storage(StorageError::RedisCommand(e.to_string()))
+            })?,
+            Err(_) => {
+                return Err(RateLimiterError::Storage(StorageError::RedisCommand(
+                    format!(
+                        "Redis PING operation timed out after {:?}",
+                        self.config.connection_timeout
+                    ),
+                )));
+            }
+        };
 
         if result == "PONG" {
             Ok(())

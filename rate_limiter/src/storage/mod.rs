@@ -2,6 +2,7 @@
 
 pub mod memory;
 pub mod redis;
+pub mod tests;
 
 pub use memory::{MemoryPipeline, MemoryStorage};
 pub use redis::{RedisPipeline, RedisStorage};

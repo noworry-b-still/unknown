@@ -6,6 +6,7 @@ pub mod logging;
 pub mod resilience;
 pub mod storage;
 pub mod test_utils;
+pub mod tests;
 
 pub use algorithms::{RateLimitAlgorithm, RateLimitStatus};
 pub use config::{FixedWindowConfig, RateLimiterConfig, SlidingWindowConfig, TokenBucketConfig};

@@ -4,6 +4,7 @@
 mod circuit_breaker_tests;
 mod exponential_backoff_tests;
 mod health_checker_tests;
+pub mod resilient_storage_tests;
 
 // Common test utilities for resilience testing
 pub(crate) mod utils {

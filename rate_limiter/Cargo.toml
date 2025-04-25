@@ -18,3 +18,23 @@ uuid = { version = "1.16.0", features = ["v4"] }
 dotenv = "0.15"
 futures = "0.3.31"
 rand = "0.9.1"
+structopt = "0.3.26"
+prettytable-rs = "0.10"
+indicatif = "0.17.3"
+ctrlc = "3.2.5"
+
+[dev-dependencies]
+tokio-test = "0.4.2"
+tracing-test = "0.2.4"
+
+[[bin]]
+name = "rate_limiter_cli"
+path = "src/bin/rate_limiter_cli.rs"
+
+[[bin]]
+name = "rate_limiter_bench"
+path = "src/bin/rate_limiter_bench.rs"
+
+[lib]
+name = "rate_limiter"
+path = "src/lib.rs"

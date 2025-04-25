@@ -58,3 +58,6 @@ Temporary Items
 
 # Backup files
 *~
+
+# Benchmark results
+benchmark_results/

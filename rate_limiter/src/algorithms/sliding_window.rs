@@ -95,6 +95,12 @@ where
                         let mut arr = [0; 8];
                         arr.copy_from_slice(&bytes);
                         u64::from_be_bytes(arr)
+                    } else if !bytes.is_empty() {
+                        // Try to parse as string if it's not a byte array
+                        match std::str::from_utf8(&bytes) {
+                            Ok(s) => s.parse::<u64>().unwrap_or(0),
+                            Err(_) => 0,
+                        }
                     } else {
                         0
                     }
@@ -108,16 +114,24 @@ where
         Ok(bucket_counts)
     }
 
-    /// Increment the count for the current bucket
+    /// Initialize or increment the current bucket
     async fn increment_current_bucket(&self, key: &str) -> Result<u64> {
         let current_index = self.current_bucket_index();
         let bucket_key = format!("{}:bucket:{}", key, current_index);
 
-        // Increment the counter
+        // First check if the key exists
+        let exists = self.storage.exists(&bucket_key).await?;
+
+        // If key doesn't exist, initialize it first
+        if !exists {
+            // Initialize with zero (stored as an integer)
+            self.storage.set(&bucket_key, b"0", None).await?;
+        }
+
+        // Now increment the counter
         let result = self.storage.increment(&bucket_key, 1).await?;
 
         // Set expiration for the bucket key
-        // We need to keep buckets around for the window duration
         let ttl = self.config.window + Duration::from_secs(60); // Add buffer for clock skew
         self.storage.expire(&bucket_key, ttl).await?;
 
@@ -209,14 +223,13 @@ where
         }
 
         // Calculate remaining requests
-        let remaining = self.config.max_requests.saturating_sub(total_count);
+        let mut remaining = self.config.max_requests.saturating_sub(total_count);
         if allowed {
             // If we just used a token, subtract 1 more
-            let _remaining = remaining.saturating_sub(1);
+            remaining = remaining.saturating_sub(1);
         }
 
         // Calculate reset time based on bucket expiration
-        // This is approximate for a sliding window
         let bucket_size = self.bucket_size_secs();
         let reset_after = Duration::from_secs(bucket_size * self.config.precision.max(1) as u64);
 
@@ -241,8 +254,8 @@ where
 
         for i in start_index..=current_index {
             let bucket_key = format!("{}:bucket:{}", key, i);
-            // Set all buckets to 0
-            pipeline.set(&bucket_key, &0u64.to_be_bytes(), None);
+            // Set all buckets to "0" as a string to ensure Redis compatibility
+            pipeline.set(&bucket_key, b"0", None);
         }
 
         // Execute the pipeline

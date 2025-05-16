@@ -1,30 +1,48 @@
 # 🚦 Distributed Rate Limiting Service
 
-A scalable, production-ready **rate limiting API** built with **Rust** (core engine) and **Elixir Phoenix** (API & dashboard). Supports multiple algorithms, multi-tenant configs, and billing integration.
-
----
-
-## 📌 Features
-
-- Token Bucket & Sliding Window algorithms
-- Redis-based distributed sync
-- REST API + API key auth
-- Multi-tenant support
-- Phoenix LiveView dashboard
-- Stripe subscription billing
-- Dockerized & ready to deploy
+A scalable, production-ready **rate limiting API** being built with **Rust** (core engine) and **Elixir/Phoenix** (API & dashboard). Supports multiple algorithms, multi-tenant configs, and billing integration.
 
 ---
 
 ## 🧱 Tech Stack
 
-| Layer            | Tech               |
-|------------------|--------------------|
-| Core Engine      | Rust               |
-| API + Web UI     | Elixir (Phoenix)   |
-| Coordination     | Redis              |
-| Billing          | Stripe             |
-| Deployment       | Docker, Fly.io     |
+| Layer            | Tech               | Status                           |
+|------------------|--------------------|----------------------------------|
+| Core Engine      | Rust               | ✅ Phase 1 complete, Phase 2 WIP |
+| API + Web UI     | Elixir (Phoenix)   | ⏳ Pending                        |
+| Coordination     | Redis              | ⏳ Pending                        |
+| Billing          | Stripe             | ⏳ Pending                        |
+| Deployment       | Docker, Fly.io     | ⏳ Pending                        |
+
+
+---
+
+## 📌 Features
+
+- Token Bucket, Sliding Window, Fixed Window algorithms
+- Redis-based distributed sync
+- Circuit breaker, health checks, and fallback mechanisms
+- REST API with API key authentication
+- Multi-tenant support
+- Phoenix LiveView dashboard
+- Stripe subscription billing
+- Dockerized and deploy-ready
+
+
+---
+
+## 🧩 Architecture Phases
+
+### ✅ Phase 1: Core Engine
+- Rate limiting algorithms (Token Bucket, Sliding, Fixed)
+- In-memory + Redis backends
+- Resilience: Circuit breaker, health checks, fallback
+
+### 🚧 Phase 2: Distributed Architecture
+- Service discovery
+- Peer-to-peer communication
+- Distributed Consensus Implementation
+- Rate Limit Distribution Strategy 
 
 ---
 
@@ -34,14 +52,16 @@ A scalable, production-ready **rate limiting API** built with **Rust** (core eng
 - Rust (`cargo`)
 - Elixir & Phoenix
 - Redis
-- Docker (optional for full setup)
+- Docker (for full setup)
+
+
 
 ### 1. Clone the repo
 
 ```bash
 git clone https://github.com/yourusername/rate-limiter.git
 cd rate-limiter
-
+```
 
 
 
@@ -123,10 +143,11 @@ Stripe is integrated (test keys). Plans:
 
 ```
 rate-limiter/
-├── core/       # Rust rate limiter
-├── api/        # Phoenix API & dashboard
-├── sdk/        # Client SDKs (optional)
-├── billing/    # Stripe configs
+├── src/               # Rust workspace root
+│   ├── core/          # Rate limiter engine (algorithms, storage, resilience)
+│   ├── sdk/           # Optional Rust client SDKs
+│   └── billing/       # Stripe billing logic (if applicable in Rust)
+├── api/               # Phoenix API & dashboard
 ├── docker-compose.yml
 └── README.md
 ```
